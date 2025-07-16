@@ -13,6 +13,8 @@ A powerful native macOS application for converting JSON files to CSV format with
 **Download for your Mac:**
 - [📥 Intel Mac](https://github.com/simplifi/json-converter/releases/latest/download/JSON-to-CSV-Converter-intel.dmg) • [📥 Apple Silicon](https://github.com/simplifi/json-converter/releases/latest/download/JSON-to-CSV-Converter-apple-silicon.dmg)
 
+**⚠️ First Launch:** Right-click the app and select "Open" to bypass the security warning (see [Installation](#installation) for details)
+
 ---
 
 ## Features
@@ -51,7 +53,31 @@ A powerful native macOS application for converting JSON files to CSV format with
 1. Download the appropriate DMG file for your Mac
 2. Double-click the DMG to mount it
 3. Drag "JSON to CSV Converter" to your Applications folder
-4. First time running: Right-click the app and select "Open" to bypass Gatekeeper
+4. **First time running**: The app will show a security warning because it's not signed with an Apple Developer certificate
+
+### 🔒 Security Warning Fix
+
+When you first run the app, you'll see this warning:
+> "JSON to CSV Converter.app" cannot be opened because Apple cannot verify that it is free from malware.
+
+**To safely run the app:**
+
+1. **Right-click** (or Control-click) on the app
+2. Select **"Open"** from the context menu
+3. Click **"Open"** in the dialog that appears
+4. The app will now run normally
+
+**Alternative method:**
+1. Go to **System Preferences** > **Security & Privacy** > **General**
+2. Click **"Open Anyway"** next to the blocked app message
+3. Enter your password when prompted
+
+**Why this happens:**
+- The app is unsigned (requires a paid Apple Developer account)
+- This is normal for open-source software distributed outside the Mac App Store
+- The warning is Apple's way of ensuring you intentionally want to run the app
+
+**Note:** After the first time, the app will open normally without any warnings.
 
 ## Usage
 

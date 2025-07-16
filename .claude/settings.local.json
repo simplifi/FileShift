@@ -4,7 +4,8 @@
       "Bash(python3:*)",
       "Bash(chmod:*)",
       "Bash(./build_cli.sh:*)",
-      "Bash(./build_multifile.sh:*)"
+      "Bash(./build_multifile.sh:*)",
+      "Bash(gh run list:*)"
     ],
     "deny": []
   }
