@@ -5,7 +5,9 @@
       "Bash(chmod:*)",
       "Bash(./build_cli.sh:*)",
       "Bash(./build_multifile.sh:*)",
-      "Bash(gh run list:*)"
+      "Bash(gh run list:*)",
+      "Bash(gh run view:*)",
+      "Bash(ls:*)"
     ],
     "deny": []
   }
