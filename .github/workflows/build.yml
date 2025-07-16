@@ -48,6 +48,16 @@ jobs:
     
     - name: Create DMG
       run: |
+        # Debug: Check what was created
+        echo "Contents of dist directory:"
+        ls -la dist/
+        
+        # Verify the app exists
+        if [ ! -d "dist/JSON to CSV Converter.app" ]; then
+          echo "ERROR: Application not found in dist directory"
+          exit 1
+        fi
+        
         # Create a DMG for easier distribution
         mkdir -p dmg_contents
         cp -R "dist/JSON to CSV Converter.app" dmg_contents/
