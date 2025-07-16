@@ -67,13 +67,6 @@ jobs:
         name: JSON-to-CSV-Converter-${{ matrix.name }}
         path: JSON-to-CSV-Converter-${{ matrix.name }}.dmg
         if-no-files-found: error
-    
-    - name: Upload app bundle artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: JSON-to-CSV-Converter-app-${{ matrix.name }}
-        path: dist/JSON to CSV Converter.app
-        if-no-files-found: error
 
   create-release:
     needs: build-macos
