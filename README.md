@@ -3,8 +3,6 @@
 A powerful native macOS application for converting JSON files to CSV format with advanced schema analysis and field merging capabilities.
 
 ![Build Status](https://github.com/simplifi/json-converter/workflows/Build%20JSON%20to%20CSV%20Converter/badge.svg)
-[![Latest Release](https://img.shields.io/github/v/release/simplifi/json-converter)](https://github.com/simplifi/json-converter/releases/latest)
-[![Downloads](https://img.shields.io/github/downloads/simplifi/json-converter/total)](https://github.com/simplifi/json-converter/releases)
 
 ---
 
