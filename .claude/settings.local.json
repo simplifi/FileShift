@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3:*)",
+      "Bash(chmod:*)",
+      "Bash(./build_cli.sh:*)",
+      "Bash(./build_multifile.sh:*)"
+    ],
+    "deny": []
+  }
+}

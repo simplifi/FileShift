@@ -1,0 +1,56 @@
+# Build artifacts
+build/
+dist/
+*.egg-info/
+*.spec
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+.venv_intel/
+venv_intel/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+
+# Data files (keep repository clean)
+*.csv
+!samples/*.csv
+*.zip
+export-*
+user-export-*
+test_data_*
+
+# Keep sample files in the repo
+!samples/*.json
+!samples/*.csv
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# PyInstaller specific
+*.manifest
+*.spec

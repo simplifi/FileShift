@@ -1,0 +1,112 @@
+name: Build JSON to CSV Converter
+
+on:
+  push:
+    branches: [ main, master ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-macos:
+    strategy:
+      matrix:
+        include:
+          - os: macos-13  # Intel
+            arch: x86_64
+            name: intel
+          - os: macos-latest  # Apple Silicon
+            arch: arm64
+            name: apple-silicon
+    
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyinstaller PyQt6
+    
+    - name: Build application
+      run: |
+        pyinstaller --name "JSON to CSV Converter" \
+          --windowed \
+          --onedir \
+          --noconfirm \
+          --clean \
+          --osx-bundle-identifier "com.simplifi.jsontocsv" \
+          json_to_csv_multifile_pyqt.py
+    
+    - name: Create DMG
+      run: |
+        # Create a DMG for easier distribution
+        mkdir -p dmg_contents
+        cp -R "dist/JSON to CSV Converter.app" dmg_contents/
+        
+        # Create Applications symlink
+        ln -s /Applications dmg_contents/Applications
+        
+        # Create DMG
+        hdiutil create -volname "JSON to CSV Converter" \
+          -srcfolder dmg_contents \
+          -ov -format UDZO \
+          "JSON-to-CSV-Converter-${{ matrix.name }}.dmg"
+    
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: JSON-to-CSV-Converter-${{ matrix.name }}
+        path: JSON-to-CSV-Converter-${{ matrix.name }}.dmg
+        if-no-files-found: error
+    
+    - name: Upload app bundle artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: JSON-to-CSV-Converter-app-${{ matrix.name }}
+        path: dist/JSON to CSV Converter.app
+        if-no-files-found: error
+
+  create-release:
+    needs: build-macos
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+    
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          JSON-to-CSV-Converter-intel/JSON-to-CSV-Converter-intel.dmg
+          JSON-to-CSV-Converter-apple-silicon/JSON-to-CSV-Converter-apple-silicon.dmg
+        body: |
+          ## JSON to CSV Converter
+          
+          ### Downloads
+          - **Intel Macs**: `JSON-to-CSV-Converter-intel.dmg`
+          - **Apple Silicon Macs** (M1/M2/M3): `JSON-to-CSV-Converter-apple-silicon.dmg`
+          
+          ### How to check your Mac type
+          1. Click the Apple menu > About This Mac
+          2. Look for "Chip" or "Processor"
+             - Intel processor = Download Intel version
+             - Apple M1/M2/M3 = Download Apple Silicon version
+          
+          ### Installation
+          1. Download the appropriate DMG file
+          2. Double-click to mount it
+          3. Drag the app to your Applications folder
+          4. First time running: Right-click and select "Open" to bypass Gatekeeper
+        draft: false
+        prerelease: false

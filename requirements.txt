@@ -1,0 +1,20 @@
+# JSON to CSV Converter - Python Dependencies
+# 
+# This project uses only Python standard library modules.
+# No additional packages need to be installed.
+#
+# Standard library modules used:
+# - tkinter (GUI)
+# - json (JSON parsing)
+# - csv (CSV writing)
+# - os (file operations)
+# - threading (background processing)
+# - pathlib (path handling)
+# - collections (OrderedDict)
+# - datetime (timestamps)
+#
+# For the multi-file GUI version:
+PyQt6>=6.0
+
+# For building standalone app bundles:
+pyinstaller>=5.0
