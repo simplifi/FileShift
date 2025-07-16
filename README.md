@@ -3,6 +3,17 @@
 A powerful native macOS application for converting JSON files to CSV format with advanced schema analysis and field merging capabilities.
 
 ![Build Status](https://github.com/simplifi/json-converter/workflows/Build%20JSON%20to%20CSV%20Converter/badge.svg)
+[![Latest Release](https://img.shields.io/github/v/release/simplifi/json-converter)](https://github.com/simplifi/json-converter/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/simplifi/json-converter/total)](https://github.com/simplifi/json-converter/releases)
+
+---
+
+## 🚀 Quick Start
+
+**Download for your Mac:**
+- [📥 Intel Mac](https://github.com/simplifi/json-converter/releases/latest/download/JSON-to-CSV-Converter-intel.dmg) • [📥 Apple Silicon](https://github.com/simplifi/json-converter/releases/latest/download/JSON-to-CSV-Converter-apple-silicon.dmg)
+
+---
 
 ## Features
 
@@ -18,12 +29,16 @@ A powerful native macOS application for converting JSON files to CSV format with
 - 🖥️ **Native macOS Interface**: Built with PyQt6 for a smooth, native experience
 - 📝 **Real-time Status Logging**: Track conversion progress with detailed logs
 
-## Download
+## 📥 Download
 
-Download the latest release for your Mac type from the [Releases](https://github.com/simplifi/json-converter/releases) page:
+### Quick Download (Latest Release)
 
-- **Intel Macs**: `JSON-to-CSV-Converter-intel.dmg`
-- **Apple Silicon Macs** (M1/M2/M3): `JSON-to-CSV-Converter-apple-silicon.dmg`
+| Mac Type | Download Link |
+|----------|--------------|
+| **Intel Macs** | [📥 Download Intel DMG](https://github.com/simplifi/json-converter/releases/latest/download/JSON-to-CSV-Converter-intel.dmg) |
+| **Apple Silicon** (M1/M2/M3) | [📥 Download Apple Silicon DMG](https://github.com/simplifi/json-converter/releases/latest/download/JSON-to-CSV-Converter-apple-silicon.dmg) |
+
+> **📋 All Releases**: View all versions on the [Releases page](https://github.com/simplifi/json-converter/releases)
 
 ### How to check your Mac type
 1. Click the Apple menu  > About This Mac
