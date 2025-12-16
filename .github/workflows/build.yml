@@ -14,10 +14,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: macos-13
-            arch: x86_64
-            name: intel
-          - os: macos-latest
+          - os: macos-15
             arch: arm64
             name: apple-silicon
 
@@ -74,24 +71,15 @@ jobs:
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
-        files: |
-          FileShift-intel/FileShift-intel.dmg
-          FileShift-apple-silicon/FileShift-apple-silicon.dmg
+        files: FileShift-apple-silicon/FileShift-apple-silicon.dmg
         body: |
           ## FileShift
 
-          ### Downloads
-          - **Intel Macs**: `FileShift-intel.dmg`
-          - **Apple Silicon Macs** (M1/M2/M3): `FileShift-apple-silicon.dmg`
-
-          ### How to check your Mac type
-          1. Click the Apple menu > About This Mac
-          2. Look for "Chip" or "Processor"
-             - Intel processor = Download Intel version
-             - Apple M1/M2/M3 = Download Apple Silicon version
+          ### Download
+          - **Apple Silicon Macs** (M1/M2/M3/M4): `FileShift-apple-silicon.dmg`
 
           ### Installation
-          1. Download the appropriate DMG file
+          1. Download the DMG file
           2. Double-click to mount it
           3. Drag the app to your Applications folder
           4. First time running: Right-click and select "Open" to bypass Gatekeeper
