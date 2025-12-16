@@ -64,3 +64,4 @@ coverage.xml
 
 # Serena
 .serena/
+.claude/settings.local.json
