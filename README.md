@@ -64,22 +64,15 @@ A powerful native macOS application for converting, splitting, and merging JSON,
 
 ### Security Warning Fix
 
-When you first run the app, you'll see this warning:
-> "FileShift.app" cannot be opened because Apple cannot verify that it is free from malware.
+Since the app isn't signed with an Apple Developer certificate, macOS will block it on first launch. Here's how to open it:
 
-**To safely run the app:**
+1. **Try to open the app** - You'll see a warning saying "FileShift.app cannot be opened because Apple cannot verify it is free of malware." Click **Done** (not "Move to Trash").
 
-1. **Right-click** (or Control-click) on the app
-2. Select **"Open"** from the context menu
-3. Click **"Open"** in the dialog that appears
-4. The app will now run normally
+2. **Open System Settings** - Go to **Privacy & Security** and scroll down to the **Security** section. You'll see a message: *"FileShift.app" was blocked to protect your Mac.* Click **Open Anyway**.
 
-**Alternative method:**
-1. Go to **System Settings** > **Privacy & Security**
-2. Scroll down and click **"Open Anyway"** next to the blocked app message
-3. Enter your password when prompted
+3. **Confirm** - A final dialog will appear asking if you're sure. Click **Open Anyway** to launch the app.
 
-**Note:** After the first time, the app will open normally without any warnings.
+After this one-time setup, the app will open normally without any warnings.
 
 ## Usage
 
