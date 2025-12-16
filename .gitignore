@@ -55,3 +55,12 @@ test_data_*
 *.manifest
 *.spec
 !fileshift.spec
+# Claude Code
+.claude/settings.local.json
+
+# Coverage
+.coverage
+coverage.xml
+
+# Serena
+.serena/
