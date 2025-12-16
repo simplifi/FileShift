@@ -1,4 +1,4 @@
-name: Build JSON to CSV Converter
+name: Build FileShift
 
 on:
   push:
@@ -20,22 +20,22 @@ jobs:
           - os: macos-latest  # Apple Silicon
             arch: arm64
             name: apple-silicon
-    
+
     runs-on: ${{ matrix.os }}
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
-    
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install pyinstaller PyQt6
-    
+
     - name: Build application
       run: |
         # Create optimized spec file
@@ -61,6 +61,9 @@ excluded_modules = [
 
 a = Analysis(
     ['json_to_csv_multifile_pyqt.py'],
+    pathex=['.'],
+    datas=[('src', 'src')],
+    hiddenimports=['src.converters', 'src.converters.base', 'src.converters.handlers', 'src.converters.operations'],
     excludes=excluded_modules,
     optimize=2,
 )
@@ -78,7 +81,7 @@ pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 exe = EXE(
     pyz, a.scripts, [],
     exclude_binaries=True,
-    name='JSON to CSV Converter',
+    name='FileShift',
     debug=False,
     strip=True,
     upx=False,
@@ -89,79 +92,79 @@ coll = COLLECT(
     exe, a.binaries, a.zipfiles, a.datas,
     strip=True,
     upx=False,
-    name='JSON to CSV Converter',
+    name='FileShift',
 )
 
 app = BUNDLE(
     coll,
-    name='JSON to CSV Converter.app',
-    bundle_identifier='com.simplifi.jsontocsv',
+    name='FileShift.app',
+    bundle_identifier='com.simplifi.fileshift',
 )
 EOF
-        
+
         # Build with optimized spec
         pyinstaller --clean json_to_csv_multifile_pyqt.spec
-    
+
     - name: Create DMG
       run: |
         # Debug: Check what was created
         echo "Contents of dist directory:"
         ls -la dist/
-        
+
         # Verify the app exists
-        if [ ! -d "dist/JSON to CSV Converter.app" ]; then
+        if [ ! -d "dist/FileShift.app" ]; then
           echo "ERROR: Application not found in dist directory"
           exit 1
         fi
-        
+
         # Create a DMG for easier distribution
         mkdir -p dmg_contents
-        cp -R "dist/JSON to CSV Converter.app" dmg_contents/
-        
+        cp -R "dist/FileShift.app" dmg_contents/
+
         # Create Applications symlink
         ln -s /Applications dmg_contents/Applications
-        
+
         # Create DMG
-        hdiutil create -volname "JSON to CSV Converter" \
+        hdiutil create -volname "FileShift" \
           -srcfolder dmg_contents \
           -ov -format UDZO \
-          "JSON-to-CSV-Converter-${{ matrix.name }}.dmg"
-    
+          "FileShift-${{ matrix.name }}.dmg"
+
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: JSON-to-CSV-Converter-${{ matrix.name }}
-        path: JSON-to-CSV-Converter-${{ matrix.name }}.dmg
+        name: FileShift-${{ matrix.name }}
+        path: FileShift-${{ matrix.name }}.dmg
         if-no-files-found: error
 
   create-release:
     needs: build-macos
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
-    
+
     steps:
     - name: Download all artifacts
       uses: actions/download-artifact@v4
-    
+
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          JSON-to-CSV-Converter-intel/JSON-to-CSV-Converter-intel.dmg
-          JSON-to-CSV-Converter-apple-silicon/JSON-to-CSV-Converter-apple-silicon.dmg
+          FileShift-intel/FileShift-intel.dmg
+          FileShift-apple-silicon/FileShift-apple-silicon.dmg
         body: |
-          ## JSON to CSV Converter
-          
+          ## FileShift
+
           ### Downloads
-          - **Intel Macs**: `JSON-to-CSV-Converter-intel.dmg`
-          - **Apple Silicon Macs** (M1/M2/M3): `JSON-to-CSV-Converter-apple-silicon.dmg`
-          
+          - **Intel Macs**: `FileShift-intel.dmg`
+          - **Apple Silicon Macs** (M1/M2/M3): `FileShift-apple-silicon.dmg`
+
           ### How to check your Mac type
           1. Click the Apple menu > About This Mac
           2. Look for "Chip" or "Processor"
              - Intel processor = Download Intel version
              - Apple M1/M2/M3 = Download Apple Silicon version
-          
+
           ### Installation
           1. Download the appropriate DMG file
           2. Double-click to mount it
