@@ -54,3 +54,4 @@ test_data_*
 # PyInstaller specific
 *.manifest
 *.spec
+!fileshift.spec
