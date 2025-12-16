@@ -8,7 +8,7 @@ A powerful native macOS application for converting, splitting, and merging JSON,
 
 ## Quick Start
 
-**Download:** [FileShift for Apple Silicon](https://github.com/simplifi/FileShift/releases/latest/download/FileShift-apple-silicon.dmg) (M1/M2/M3/M4)
+**Download:** [FileShift for Apple Silicon](https://github.com/simplifi/FileShift/releases/download/v0.2.0/FileShift-apple-silicon.dmg) (M1/M2/M3/M4)
 
 **First Launch:** Right-click the app and select "Open" to bypass the security warning (see [Installation](#installation) for details)
 
@@ -51,7 +51,7 @@ A powerful native macOS application for converting, splitting, and merging JSON,
 
 | Mac Type | Download Link |
 |----------|--------------|
-| **Apple Silicon** (M1/M2/M3/M4) | [Download DMG](https://github.com/simplifi/FileShift/releases/latest/download/FileShift-apple-silicon.dmg) |
+| **Apple Silicon** (M1/M2/M3/M4) | [Download DMG](https://github.com/simplifi/FileShift/releases/download/v0.2.0/FileShift-apple-silicon.dmg) |
 
 > **All Releases**: View all versions on the [Releases page](https://github.com/simplifi/FileShift/releases)
 
