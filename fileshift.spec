@@ -15,7 +15,7 @@ excluded_modules = [
     'PyQt6.QtSvgWidgets', 'PyQt6.QtTest', 'PyQt6.QtWebChannel',
     'PyQt6.QtWebEngine', 'PyQt6.QtWebEngineCore', 'PyQt6.QtWebEngineWidgets',
     'PyQt6.QtWebSockets', 'PyQt6.QtXml',
-    'test', 'unittest', 'xml', 'email', 'html', 'http', 'urllib',
+    'test', 'unittest', 'xml', 'email', 'html', 'http',
     'ssl', '_ssl', 'cryptography', 'certifi', 'PIL', 'numpy', 'matplotlib',
 ]
 
