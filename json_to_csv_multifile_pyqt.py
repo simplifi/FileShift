@@ -276,11 +276,15 @@ class MultiFileConverter(QMainWindow):
         title_label.setFont(title_font)
         main_layout.addWidget(title_label)
 
-        # Tab Widget
+        # Shared File Selection Section (at the top)
+        self.setup_file_selection(main_layout)
+
+        # Tab Widget (below file selection)
         self.tab_widget = QTabWidget()
         self.tab_widget.addTab(self.create_convert_tab(), "Convert")
         self.tab_widget.addTab(self.create_split_tab(), "Split")
         self.tab_widget.addTab(self.create_merge_tab(), "Merge")
+        self.tab_widget.currentChanged.connect(self.on_tab_changed)
         main_layout.addWidget(self.tab_widget)
 
         # Status Log (shared across tabs)
@@ -292,29 +296,8 @@ class MultiFileConverter(QMainWindow):
         layout = QVBoxLayout(tab)
         layout.setSpacing(10)
 
-        # Step 1: Select Files
-        step1_group = QGroupBox("Step 1: Select Files")
-        step1_layout = QHBoxLayout()
-
-        self.browse_button = QPushButton("Browse for Files")
-        self.browse_button.setStyleSheet(GREEN_BUTTON_STYLE)
-        self.browse_button.clicked.connect(self.browse_files)
-        step1_layout.addWidget(self.browse_button)
-
-        self.file_list_text = QTextEdit()
-        self.file_list_text.setMaximumHeight(80)
-        self.file_list_text.setReadOnly(True)
-        self.file_list_text.setPlainText("No files selected")
-        step1_layout.addWidget(self.file_list_text, 1)
-
-        self.file_count_label = QLabel("0 files selected")
-        step1_layout.addWidget(self.file_count_label)
-
-        step1_group.setLayout(step1_layout)
-        layout.addWidget(step1_group)
-
-        # Step 2: Schema Analysis
-        step2_group = QGroupBox("Step 2: Schema Analysis")
+        # Step 1: Schema Analysis
+        step2_group = QGroupBox("Step 1: Schema Analysis")
         step2_layout = QVBoxLayout()
 
         self.analysis_label = QLabel("Select files to analyze schemas")
@@ -324,8 +307,8 @@ class MultiFileConverter(QMainWindow):
         step2_group.setLayout(step2_layout)
         layout.addWidget(step2_group)
 
-        # Step 3: Field Selection
-        step3_group = QGroupBox("Step 3: Field Selection")
+        # Step 2: Field Selection
+        step3_group = QGroupBox("Step 2: Field Selection")
         step3_layout = QVBoxLayout()
 
         self.step3_group = step3_group
@@ -371,8 +354,8 @@ class MultiFileConverter(QMainWindow):
         step3_group.setLayout(step3_layout)
         layout.addWidget(step3_group)
 
-        # Step 4: Convert
-        step4_group = QGroupBox("Step 4: Convert to CSV")
+        # Step 3: Convert
+        step4_group = QGroupBox("Step 3: Convert to CSV")
         step4_layout = QHBoxLayout()
 
         self.convert_button = QPushButton("Convert All Files")
@@ -399,24 +382,19 @@ class MultiFileConverter(QMainWindow):
         layout = QVBoxLayout(tab)
         layout.setSpacing(10)
 
-        # Step 1: Select Input File
-        step1_group = QGroupBox("Step 1: Select Input File")
-        step1_layout = QHBoxLayout()
-
-        self.split_browse_button = QPushButton("Browse for File")
-        self.split_browse_button.setStyleSheet(GREEN_BUTTON_STYLE)
-        self.split_browse_button.clicked.connect(self.split_browse_file)
-        step1_layout.addWidget(self.split_browse_button)
+        # File info display
+        info_group = QGroupBox("File Information")
+        info_layout = QHBoxLayout()
 
         self.split_file_label = QLabel("No file selected")
         self.split_file_label.setStyleSheet("color: #666666;")
-        step1_layout.addWidget(self.split_file_label, 1)
+        info_layout.addWidget(self.split_file_label, 1)
 
-        step1_group.setLayout(step1_layout)
-        layout.addWidget(step1_group)
+        info_group.setLayout(info_layout)
+        layout.addWidget(info_group)
 
-        # Step 2: Configure Split
-        step2_group = QGroupBox("Step 2: Configure Split")
+        # Step 1: Configure Split
+        step2_group = QGroupBox("Step 1: Configure Split")
         step2_layout = QVBoxLayout()
 
         self.split_button_group = QButtonGroup()
@@ -473,8 +451,8 @@ class MultiFileConverter(QMainWindow):
         step2_group.setLayout(step2_layout)
         layout.addWidget(step2_group)
 
-        # Step 3: Output Settings
-        step3_group = QGroupBox("Step 3: Output Settings")
+        # Step 2: Output Settings
+        step3_group = QGroupBox("Step 2: Output Settings")
         step3_layout = QVBoxLayout()
 
         format_layout = QHBoxLayout()
@@ -506,8 +484,8 @@ class MultiFileConverter(QMainWindow):
         step3_group.setLayout(step3_layout)
         layout.addWidget(step3_group)
 
-        # Step 4: Execute Split
-        step4_group = QGroupBox("Step 4: Split File")
+        # Step 3: Execute Split
+        step4_group = QGroupBox("Step 3: Split File")
         step4_layout = QHBoxLayout()
 
         self.split_button = QPushButton("Split File")
@@ -534,17 +512,12 @@ class MultiFileConverter(QMainWindow):
         layout = QVBoxLayout(tab)
         layout.setSpacing(10)
 
-        # Step 1: Select Files to Merge
-        step1_group = QGroupBox("Step 1: Select Files to Merge")
-        step1_layout = QVBoxLayout()
+        # File list info display
+        info_group = QGroupBox("Selected Files")
+        info_layout = QVBoxLayout()
 
         buttons_layout = QHBoxLayout()
-        self.merge_add_button = QPushButton("Add Files")
-        self.merge_add_button.setStyleSheet(GREEN_BUTTON_STYLE)
-        self.merge_add_button.clicked.connect(self.merge_add_files)
-        buttons_layout.addWidget(self.merge_add_button)
-
-        self.merge_remove_button = QPushButton("Remove Selected")
+        self.merge_remove_button = QPushButton("Remove Last")
         self.merge_remove_button.clicked.connect(self.merge_remove_files)
         buttons_layout.addWidget(self.merge_remove_button)
 
@@ -553,22 +526,22 @@ class MultiFileConverter(QMainWindow):
         buttons_layout.addWidget(self.merge_clear_button)
 
         buttons_layout.addStretch()
-        step1_layout.addLayout(buttons_layout)
+        info_layout.addLayout(buttons_layout)
 
         self.merge_file_list = QTextEdit()
-        self.merge_file_list.setMaximumHeight(120)
+        self.merge_file_list.setMaximumHeight(80)
         self.merge_file_list.setReadOnly(True)
         self.merge_file_list.setPlainText("No files selected")
-        step1_layout.addWidget(self.merge_file_list)
+        info_layout.addWidget(self.merge_file_list)
 
         self.merge_file_count_label = QLabel("0 files, 0 total records")
-        step1_layout.addWidget(self.merge_file_count_label)
+        info_layout.addWidget(self.merge_file_count_label)
 
-        step1_group.setLayout(step1_layout)
-        layout.addWidget(step1_group)
+        info_group.setLayout(info_layout)
+        layout.addWidget(info_group)
 
-        # Step 2: Schema Handling
-        step2_group = QGroupBox("Step 2: Schema Handling")
+        # Step 1: Schema Handling
+        step2_group = QGroupBox("Step 1: Schema Handling")
         step2_layout = QVBoxLayout()
 
         self.merge_schema_group = QButtonGroup()
@@ -593,8 +566,8 @@ class MultiFileConverter(QMainWindow):
         step2_group.setLayout(step2_layout)
         layout.addWidget(step2_group)
 
-        # Step 3: Output Settings
-        step3_group = QGroupBox("Step 3: Output Settings")
+        # Step 2: Output Settings
+        step3_group = QGroupBox("Step 2: Output Settings")
         step3_layout = QVBoxLayout()
 
         format_layout = QHBoxLayout()
@@ -626,8 +599,8 @@ class MultiFileConverter(QMainWindow):
         step3_group.setLayout(step3_layout)
         layout.addWidget(step3_group)
 
-        # Step 4: Execute Merge
-        step4_group = QGroupBox("Step 4: Merge Files")
+        # Step 3: Execute Merge
+        step4_group = QGroupBox("Step 3: Merge Files")
         step4_layout = QHBoxLayout()
 
         self.merge_button = QPushButton("Merge Files")
@@ -648,6 +621,32 @@ class MultiFileConverter(QMainWindow):
         layout.addStretch()
         return tab
 
+    def setup_file_selection(self, parent_layout):
+        """Shared file selection section at the top"""
+        file_group = QGroupBox("Select File(s)")
+        file_layout = QVBoxLayout()
+
+        # Browse button and file display
+        browse_layout = QHBoxLayout()
+
+        self.main_browse_button = QPushButton("Browse for File(s)")
+        self.main_browse_button.setStyleSheet(GREEN_BUTTON_STYLE)
+        self.main_browse_button.clicked.connect(self.browse_main_files)
+        browse_layout.addWidget(self.main_browse_button)
+
+        self.main_file_display = QTextEdit()
+        self.main_file_display.setMaximumHeight(60)
+        self.main_file_display.setReadOnly(True)
+        self.main_file_display.setPlainText("No files selected")
+        browse_layout.addWidget(self.main_file_display, 1)
+
+        self.main_file_count_label = QLabel("0 files selected")
+        browse_layout.addWidget(self.main_file_count_label)
+
+        file_layout.addLayout(browse_layout)
+        file_group.setLayout(file_layout)
+        parent_layout.addWidget(file_group)
+
     def setup_status_log(self, parent_layout):
         """Status Log"""
         log_group = QGroupBox("Status Log")
@@ -661,6 +660,104 @@ class MultiFileConverter(QMainWindow):
         log_group.setLayout(log_layout)
         parent_layout.addWidget(log_group, 1)
 
+    def browse_main_files(self):
+        """Browse for files from main file selection area"""
+        # Determine which tab is active and what kind of selection to use
+        current_tab_index = self.tab_widget.currentIndex()
+
+        if current_tab_index == 0:  # Convert tab - multiple files
+            files, _ = QFileDialog.getOpenFileNames(
+                self,
+                "Select files to convert",
+                "",
+                FILE_FILTER
+            )
+            if files:
+                self.selected_files = files
+                self.update_main_file_display()
+                self.log_message(f"{len(self.selected_files)} files selected for conversion")
+                self.analyze_schemas()
+
+        elif current_tab_index == 1:  # Split tab - single file
+            file_path, _ = QFileDialog.getOpenFileName(
+                self,
+                "Select file to split",
+                "",
+                FILE_FILTER
+            )
+            if file_path:
+                self.split_input_file = Path(file_path)
+                self.update_main_file_display()
+                try:
+                    info = get_file_info(self.split_input_file)
+                    self.split_file_label.setText(
+                        f"{info['name']} ({info['format'].upper()}, {info['record_count']:,} records, {info['size_kb']:.1f} KB)"
+                    )
+                    self.split_file_label.setStyleSheet("color: #4CAF50;")
+                    self.split_button.setEnabled(True)
+                    self.log_message(f"Selected for split: {info['name']} ({info['record_count']:,} records)")
+                except Exception as e:
+                    self.split_file_label.setText(f"Error reading file: {e}")
+                    self.split_file_label.setStyleSheet("color: #f44336;")
+                    self.split_button.setEnabled(False)
+
+        else:  # Merge tab - multiple files
+            files, _ = QFileDialog.getOpenFileNames(
+                self,
+                "Select files to merge",
+                "",
+                FILE_FILTER
+            )
+            if files:
+                for file_path in files:
+                    path = Path(file_path)
+                    if path not in self.merge_input_files:
+                        self.merge_input_files.append(path)
+                self.update_main_file_display()
+                self.update_merge_file_list()
+
+    def update_main_file_display(self):
+        """Update the main file display based on current tab"""
+        current_tab_index = self.tab_widget.currentIndex()
+
+        if current_tab_index == 0:  # Convert tab
+            if self.selected_files:
+                file_names = [Path(f).name for f in self.selected_files]
+                self.main_file_display.setPlainText("\n".join(file_names))
+                self.main_file_count_label.setText(f"{len(self.selected_files)} files selected")
+            else:
+                self.main_file_display.setPlainText("No files selected")
+                self.main_file_count_label.setText("0 files selected")
+
+        elif current_tab_index == 1:  # Split tab
+            if self.split_input_file:
+                self.main_file_display.setPlainText(self.split_input_file.name)
+                self.main_file_count_label.setText("1 file selected")
+            else:
+                self.main_file_display.setPlainText("No file selected")
+                self.main_file_count_label.setText("0 files selected")
+
+        else:  # Merge tab
+            if self.merge_input_files:
+                file_names = [f.name for f in self.merge_input_files]
+                self.main_file_display.setPlainText("\n".join(file_names))
+                self.main_file_count_label.setText(f"{len(self.merge_input_files)} files selected")
+            else:
+                self.main_file_display.setPlainText("No files selected")
+                self.main_file_count_label.setText("0 files selected")
+
+    def on_tab_changed(self, index):
+        """Handle tab changes to update file display"""
+        self.update_main_file_display()
+
+        # Update button text based on tab
+        if index == 0:  # Convert
+            self.main_browse_button.setText("Browse for File(s)")
+        elif index == 1:  # Split
+            self.main_browse_button.setText("Browse for File")
+        else:  # Merge
+            self.main_browse_button.setText("Add File(s) to Merge")
+
     def log_message(self, message):
         """Add timestamped message to log"""
         timestamp = datetime.now().strftime("%H:%M:%S")
@@ -669,27 +766,6 @@ class MultiFileConverter(QMainWindow):
         QApplication.processEvents()
 
     # ==================== Convert Tab Methods ====================
-
-    def browse_files(self):
-        """Browse for files to convert"""
-        files, _ = QFileDialog.getOpenFileNames(
-            self,
-            "Select files to convert",
-            "",
-            FILE_FILTER
-        )
-
-        if files:
-            self.selected_files = files
-            self.update_file_display()
-            self.log_message(f"{len(self.selected_files)} files selected")
-            self.analyze_schemas()
-
-    def update_file_display(self):
-        """Update the file list display"""
-        file_names = [Path(f).name for f in self.selected_files]
-        self.file_list_text.setPlainText("\n".join(file_names))
-        self.file_count_label.setText(f"{len(self.selected_files)} files selected")
 
     def analyze_schemas(self):
         """Start schema analysis in background thread"""
@@ -808,30 +884,6 @@ class MultiFileConverter(QMainWindow):
 
     # ==================== Split Tab Methods ====================
 
-    def split_browse_file(self):
-        """Browse for file to split"""
-        file_path, _ = QFileDialog.getOpenFileName(
-            self,
-            "Select file to split",
-            "",
-            FILE_FILTER
-        )
-
-        if file_path:
-            self.split_input_file = Path(file_path)
-            try:
-                info = get_file_info(self.split_input_file)
-                self.split_file_label.setText(
-                    f"{info['name']} ({info['format'].upper()}, {info['record_count']:,} records, {info['size_kb']:.1f} KB)"
-                )
-                self.split_file_label.setStyleSheet("color: #4CAF50;")
-                self.split_button.setEnabled(True)
-                self.log_message(f"Selected for split: {info['name']} ({info['record_count']:,} records)")
-            except Exception as e:
-                self.split_file_label.setText(f"Error reading file: {e}")
-                self.split_file_label.setStyleSheet("color: #f44336;")
-                self.split_button.setEnabled(False)
-
     def split_browse_output_dir(self):
         """Browse for split output directory"""
         dir_path = QFileDialog.getExistingDirectory(
@@ -924,34 +976,19 @@ class MultiFileConverter(QMainWindow):
 
     # ==================== Merge Tab Methods ====================
 
-    def merge_add_files(self):
-        """Add files to merge"""
-        files, _ = QFileDialog.getOpenFileNames(
-            self,
-            "Select files to merge",
-            "",
-            FILE_FILTER
-        )
-
-        if files:
-            for file_path in files:
-                path = Path(file_path)
-                if path not in self.merge_input_files:
-                    self.merge_input_files.append(path)
-
-            self.update_merge_file_list()
-
     def merge_remove_files(self):
         """Remove selected files from merge list"""
         # For simplicity, just clear the last file
         if self.merge_input_files:
             removed = self.merge_input_files.pop()
             self.log_message(f"Removed: {removed.name}")
+            self.update_main_file_display()
             self.update_merge_file_list()
 
     def merge_clear_files(self):
         """Clear all files from merge list"""
         self.merge_input_files = []
+        self.update_main_file_display()
         self.update_merge_file_list()
 
     def update_merge_file_list(self):
