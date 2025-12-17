@@ -68,7 +68,7 @@ run-cli *ARGS:
 
 # Generate sample data
 generate-samples:
-    uv run python generate_sample_data.py
+    uv run python scripts/generate_sample_data.py
 
 # Run pre-commit hooks
 pre-commit:
