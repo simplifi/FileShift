@@ -18,7 +18,7 @@ from PyQt6.QtWidgets import (
     QHBoxLayout, QGroupBox, QPushButton, QTextEdit,
     QLabel, QRadioButton, QComboBox, QFileDialog,
     QMessageBox, QButtonGroup, QTabWidget, QSpinBox,
-    QLineEdit
+    QLineEdit, QListWidget, QListWidgetItem
 )
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
 from PyQt6.QtGui import QFont
@@ -26,7 +26,8 @@ from PyQt6.QtGui import QFont
 # Import converters
 from src.converters import (
     FileFormat, ConversionOptions, SplitOptions, MergeOptions,
-    FileSplitter, FileMerger, get_handler_for_file, get_file_info
+    FileSplitter, FileMerger, get_handler_for_file, get_file_info,
+    EncodingDetector
 )
 
 
@@ -73,7 +74,8 @@ class SchemaAnalyzerThread(QThread):
             record_count = 0
 
             try:
-                with open(file_path, 'r', encoding='utf-8') as f:
+                encoding = EncodingDetector.detect_encoding(Path(file_path))
+                with open(file_path, 'r', encoding=encoding) as f:
                     for line in f:
                         if line.strip():
                             try:
@@ -82,7 +84,8 @@ class SchemaAnalyzerThread(QThread):
                                 self.extract_fields(data, fields_set)
                             except json.JSONDecodeError:
                                 continue
-            except Exception:
+            except Exception as e:
+                self.progress.emit(f"Warning: Could not read {Path(file_path).name}: {e}")
                 continue
 
             file_schemas[file_path] = sorted(list(fields_set))
@@ -110,7 +113,7 @@ class ConversionThread(QThread):
     file_complete = pyqtSignal(str, int)
     finished = pyqtSignal(int, int)
 
-    def __init__(self, file_paths, strategy, selected_fields, output_dir, file_schemas, all_fields):
+    def __init__(self, file_paths, strategy, selected_fields, output_dir, file_schemas, all_fields, field_frequency=None):
         super().__init__()
         self.file_paths = file_paths
         self.strategy = strategy
@@ -118,9 +121,33 @@ class ConversionThread(QThread):
         self.output_dir = output_dir
         self.file_schemas = file_schemas
         self.all_fields = all_fields
+        self.field_frequency = field_frequency or {}
 
     def run(self):
         total_records = 0
+        num_files = len(self.file_paths)
+
+        # Pre-calculate fields based on strategy
+        if self.strategy == "smart_auto":
+            # Fields that appear in 70%+ of files
+            threshold = max(1, int(0.7 * num_files))
+            strategy_fields = sorted([f for f, c in self.field_frequency.items() if c >= threshold])
+        elif self.strategy == "all_available":
+            # Union of all fields
+            strategy_fields = sorted(list(self.all_fields))
+        elif self.strategy == "common_only":
+            # Fields that appear in ALL files
+            strategy_fields = sorted([f for f, c in self.field_frequency.items() if c == num_files])
+        elif self.strategy == "most_complete":
+            # Use fields from the file with the most fields
+            if self.file_schemas:
+                richest_file = max(self.file_schemas.keys(), key=lambda f: len(self.file_schemas[f]))
+                strategy_fields = sorted(self.file_schemas[richest_file])
+            else:
+                strategy_fields = sorted(list(self.all_fields))
+        else:
+            # "separate" or unknown - will use per-file fields
+            strategy_fields = None
 
         for file_path in self.file_paths:
             self.progress.emit(f"Converting {Path(file_path).name}...")
@@ -129,7 +156,7 @@ class ConversionThread(QThread):
             if self.strategy == "separate":
                 fields = self.file_schemas.get(file_path, [])
             else:
-                fields = sorted(list(self.all_fields))
+                fields = strategy_fields
 
             # Convert file
             records = self.convert_single_file(file_path, fields)
@@ -144,8 +171,11 @@ class ConversionThread(QThread):
         input_name = Path(file_path).stem
         output_file = os.path.join(self.output_dir, f"{input_name}.csv")
 
+        # Detect encoding for input file
+        encoding = EncodingDetector.detect_encoding(Path(file_path))
+        
         records_written = 0
-        with open(file_path, 'r', encoding='utf-8') as infile, \
+        with open(file_path, 'r', encoding=encoding) as infile, \
              open(output_file, 'w', newline='', encoding='utf-8') as outfile:
 
             writer = csv.DictWriter(outfile, fieldnames=fields)
@@ -251,7 +281,23 @@ class MultiFileConverter(QMainWindow):
         # Merge tab state
         self.merge_input_files: List[Path] = []
 
+        # Thread references for cleanup
+        self.analyzer_thread: Optional[QThread] = None
+        self.conversion_thread: Optional[QThread] = None
+        self.split_thread: Optional[QThread] = None
+        self.merge_thread: Optional[QThread] = None
+
         self.init_ui()
+
+    def cleanup_thread(self, thread_attr: str):
+        """Safely cleanup a thread before starting a new one"""
+        thread = getattr(self, thread_attr, None)
+        if thread is not None and thread.isRunning():
+            thread.quit()
+            thread.wait(1000)  # Wait up to 1 second
+            if thread.isRunning():
+                thread.terminate()
+                thread.wait(500)
 
     def init_ui(self):
         """Initialize the UI"""
@@ -337,20 +383,6 @@ class MultiFileConverter(QMainWindow):
             self.strategy_buttons.append((value, radio))
             step3_layout.addWidget(radio)
 
-        # Strategy dropdown
-        dropdown_layout = QHBoxLayout()
-        dropdown_label = QLabel("Strategy for each file:")
-        dropdown_layout.addWidget(dropdown_label)
-
-        self.strategy_combo = QComboBox()
-        self.strategy_combo.addItem("Select All Fields (per file)")
-        self.strategy_combo.addItem("Common Fields Only")
-        self.strategy_combo.addItem("Smart Auto (recommended)")
-        self.strategy_combo.setFixedWidth(300)
-        dropdown_layout.addWidget(self.strategy_combo)
-        dropdown_layout.addStretch()
-
-        step3_layout.addLayout(dropdown_layout)
         step3_group.setLayout(step3_layout)
         layout.addWidget(step3_group)
 
@@ -517,7 +549,7 @@ class MultiFileConverter(QMainWindow):
         info_layout = QVBoxLayout()
 
         buttons_layout = QHBoxLayout()
-        self.merge_remove_button = QPushButton("Remove Last")
+        self.merge_remove_button = QPushButton("Remove Selected")
         self.merge_remove_button.clicked.connect(self.merge_remove_files)
         buttons_layout.addWidget(self.merge_remove_button)
 
@@ -528,10 +560,9 @@ class MultiFileConverter(QMainWindow):
         buttons_layout.addStretch()
         info_layout.addLayout(buttons_layout)
 
-        self.merge_file_list = QTextEdit()
-        self.merge_file_list.setMaximumHeight(80)
-        self.merge_file_list.setReadOnly(True)
-        self.merge_file_list.setPlainText("No files selected")
+        self.merge_file_list = QListWidget()
+        self.merge_file_list.setMaximumHeight(100)
+        self.merge_file_list.setSelectionMode(QListWidget.SelectionMode.ExtendedSelection)
         info_layout.addWidget(self.merge_file_list)
 
         self.merge_file_count_label = QLabel("0 files, 0 total records")
@@ -747,7 +778,61 @@ class MultiFileConverter(QMainWindow):
                 self.main_file_count_label.setText("0 files selected")
 
     def on_tab_changed(self, index):
-        """Handle tab changes to update file display"""
+        """Handle tab changes to update file display and transfer files between tabs"""
+        previous_tab = getattr(self, '_previous_tab', None)
+        
+        # Transfer files from previous tab to current tab
+        if previous_tab == 0 and self.selected_files:  # Coming from Convert
+            if index == 1:  # Going to Split - use first file
+                self.split_input_file = Path(self.selected_files[0])
+                # Update split file info
+                try:
+                    info = get_file_info(self.split_input_file)
+                    self.split_file_label.setText(
+                        f"{info['name']} ({info['format'].upper()}, {info['record_count']:,} records, {info['size_kb']:.1f} KB)"
+                    )
+                    self.split_file_label.setStyleSheet("color: #4CAF50;")
+                    self.split_button.setEnabled(True)
+                except Exception as e:
+                    self.split_file_label.setText(f"Error reading file: {e}")
+                    self.split_file_label.setStyleSheet("color: #f44336;")
+            elif index == 2:  # Going to Merge
+                for f in self.selected_files:
+                    path = Path(f)
+                    if path not in self.merge_input_files:
+                        self.merge_input_files.append(path)
+                self.update_merge_file_list()
+        
+        elif previous_tab == 1 and self.split_input_file:  # Coming from Split
+            if index == 0:  # Going to Convert
+                if str(self.split_input_file) not in self.selected_files:
+                    self.selected_files = [str(self.split_input_file)]
+                    self.analyze_schemas()
+            elif index == 2:  # Going to Merge
+                if self.split_input_file not in self.merge_input_files:
+                    self.merge_input_files.append(self.split_input_file)
+                self.update_merge_file_list()
+        
+        elif previous_tab == 2 and self.merge_input_files:  # Coming from Merge
+            if index == 0:  # Going to Convert
+                self.selected_files = [str(f) for f in self.merge_input_files]
+                self.analyze_schemas()
+            elif index == 1:  # Going to Split - use first file
+                self.split_input_file = self.merge_input_files[0]
+                try:
+                    info = get_file_info(self.split_input_file)
+                    self.split_file_label.setText(
+                        f"{info['name']} ({info['format'].upper()}, {info['record_count']:,} records, {info['size_kb']:.1f} KB)"
+                    )
+                    self.split_file_label.setStyleSheet("color: #4CAF50;")
+                    self.split_button.setEnabled(True)
+                except Exception as e:
+                    self.split_file_label.setText(f"Error reading file: {e}")
+                    self.split_file_label.setStyleSheet("color: #f44336;")
+        
+        # Store current tab for next switch
+        self._previous_tab = index
+        
         self.update_main_file_display()
 
         # Update button text based on tab
@@ -769,6 +854,7 @@ class MultiFileConverter(QMainWindow):
 
     def analyze_schemas(self):
         """Start schema analysis in background thread"""
+        self.cleanup_thread('analyzer_thread')
         self.log_message("Analyzing file schemas...")
 
         self.analyzer_thread = SchemaAnalyzerThread(self.selected_files)
@@ -842,6 +928,7 @@ class MultiFileConverter(QMainWindow):
     def convert_files(self):
         """Start file conversion"""
         if not self.selected_files:
+            QMessageBox.warning(self, "No Files", "Please select files to convert first.")
             return
 
         output_dir = QFileDialog.getExistingDirectory(
@@ -852,8 +939,30 @@ class MultiFileConverter(QMainWindow):
         if not output_dir:
             return
 
+        # Check for existing files that would be overwritten
+        existing_files = []
+        for file_path in self.selected_files:
+            output_file = Path(output_dir) / f"{Path(file_path).stem}.csv"
+            if output_file.exists():
+                existing_files.append(output_file.name)
+        
+        if existing_files:
+            msg = f"The following files will be overwritten:\n\n" + "\n".join(existing_files[:10])
+            if len(existing_files) > 10:
+                msg += f"\n... and {len(existing_files) - 10} more"
+            msg += "\n\nDo you want to continue?"
+            
+            reply = QMessageBox.question(
+                self, "Confirm Overwrite", msg,
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No
+            )
+            if reply != QMessageBox.StandardButton.Yes:
+                return
+
         self.convert_button.setEnabled(False)
-        self.log_message("Starting conversion...")
+        self.cleanup_thread('conversion_thread')
+        self.log_message(f"Starting conversion with strategy: {self.selected_strategy}")
 
         self.conversion_thread = ConversionThread(
             self.selected_files,
@@ -861,7 +970,8 @@ class MultiFileConverter(QMainWindow):
             None,
             output_dir,
             self.file_schemas,
-            self.all_fields
+            self.all_fields,
+            self.field_frequency
         )
         self.conversion_thread.progress.connect(self.log_message)
         self.conversion_thread.file_complete.connect(
@@ -896,6 +1006,11 @@ class MultiFileConverter(QMainWindow):
     def execute_split(self):
         """Execute the file split operation"""
         if not self.split_input_file:
+            QMessageBox.warning(self, "No File", "Please select a file to split first.")
+            return
+        
+        if not self.split_input_file.exists():
+            QMessageBox.warning(self, "File Not Found", f"The selected file no longer exists:\n{self.split_input_file}")
             return
 
         # Determine split mode
@@ -937,6 +1052,7 @@ class MultiFileConverter(QMainWindow):
 
         self.split_button.setEnabled(False)
         self.split_status_label.setText("")
+        self.cleanup_thread('split_thread')
         self.log_message(f"Starting split ({split_mode})...")
 
         # Start split thread
@@ -978,12 +1094,19 @@ class MultiFileConverter(QMainWindow):
 
     def merge_remove_files(self):
         """Remove selected files from merge list"""
-        # For simplicity, just clear the last file
-        if self.merge_input_files:
-            removed = self.merge_input_files.pop()
-            self.log_message(f"Removed: {removed.name}")
-            self.update_main_file_display()
-            self.update_merge_file_list()
+        selected_items = self.merge_file_list.selectedItems()
+        if not selected_items:
+            QMessageBox.information(self, "No Selection", "Please select files to remove from the list.")
+            return
+        
+        for item in selected_items:
+            file_path = item.data(Qt.ItemDataRole.UserRole)
+            if file_path in self.merge_input_files:
+                self.merge_input_files.remove(file_path)
+                self.log_message(f"Removed: {file_path.name}")
+        
+        self.update_main_file_display()
+        self.update_merge_file_list()
 
     def merge_clear_files(self):
         """Clear all files from merge list"""
@@ -993,26 +1116,28 @@ class MultiFileConverter(QMainWindow):
 
     def update_merge_file_list(self):
         """Update the merge file list display"""
+        self.merge_file_list.clear()
+        
         if not self.merge_input_files:
-            self.merge_file_list.setPlainText("No files selected")
             self.merge_file_count_label.setText("0 files, 0 total records")
             self.merge_button.setEnabled(False)
             self.merge_schema_info_label.setText("")
             return
 
         # Build file list with info
-        lines = []
         total_records = 0
 
         for file_path in self.merge_input_files:
             try:
                 info = get_file_info(file_path)
-                lines.append(f"{info['name']} ({info['format'].upper()}, {info['record_count']:,} records)")
+                item = QListWidgetItem(f"{info['name']} ({info['format'].upper()}, {info['record_count']:,} records)")
+                item.setData(Qt.ItemDataRole.UserRole, file_path)  # Store path for removal
                 total_records += info['record_count']
             except Exception:
-                lines.append(f"{file_path.name} (error reading)")
+                item = QListWidgetItem(f"{file_path.name} (error reading)")
+                item.setData(Qt.ItemDataRole.UserRole, file_path)
+            self.merge_file_list.addItem(item)
 
-        self.merge_file_list.setPlainText("\n".join(lines))
         self.merge_file_count_label.setText(f"{len(self.merge_input_files)} files, {total_records:,} total records")
         self.merge_button.setEnabled(len(self.merge_input_files) >= 2)
 
@@ -1052,6 +1177,13 @@ class MultiFileConverter(QMainWindow):
     def execute_merge(self):
         """Execute the file merge operation"""
         if len(self.merge_input_files) < 2:
+            QMessageBox.warning(self, "Not Enough Files", "Please select at least 2 files to merge.")
+            return
+        
+        # Verify all files still exist
+        missing = [f for f in self.merge_input_files if not f.exists()]
+        if missing:
+            QMessageBox.warning(self, "Files Not Found", "Some files no longer exist:\n" + "\n".join(str(f) for f in missing))
             return
 
         # Get schema strategy
@@ -1078,6 +1210,17 @@ class MultiFileConverter(QMainWindow):
             ext = ext_map.get(output_format, '.csv')
             output_path = self.merge_input_files[0].parent / f"merged{ext}"
 
+        # Check for existing output file
+        if output_path.exists():
+            reply = QMessageBox.question(
+                self, "Confirm Overwrite",
+                f"The file '{output_path.name}' already exists.\n\nDo you want to overwrite it?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No
+            )
+            if reply != QMessageBox.StandardButton.Yes:
+                return
+
         # Create merge options
         merge_options = MergeOptions(
             output_format=output_format,
@@ -1087,6 +1230,7 @@ class MultiFileConverter(QMainWindow):
 
         self.merge_button.setEnabled(False)
         self.merge_status_label.setText("")
+        self.cleanup_thread('merge_thread')
         self.log_message(f"Starting merge ({schema_strategy} schema)...")
 
         # Start merge thread
