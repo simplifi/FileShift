@@ -54,9 +54,13 @@ test_data_*
 # PyInstaller specific
 *.manifest
 *.spec
-!fileshift.spec
+!packaging/fileshift.spec
 # Claude Code
 .claude/settings.local.json
+
+# Testing
+.pytest_cache/
+htmlcov/
 
 # Coverage
 .coverage

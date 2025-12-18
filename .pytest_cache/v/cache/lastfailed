@@ -1,4 +1,0 @@
-{
-  "tests/test_base.py::TestEncodingDetector::test_detect_latin1_encoding": true,
-  "tests/test_base.py::TestFormatHandlerBase::test_unflatten_record": true
-}
