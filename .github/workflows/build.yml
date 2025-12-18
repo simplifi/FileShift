@@ -34,7 +34,7 @@ jobs:
         pip install pyinstaller PyQt6
 
     - name: Build application
-      run: pyinstaller --clean fileshift.spec
+      run: pyinstaller --clean packaging/fileshift.spec
 
     - name: Create DMG
       run: |
