@@ -60,19 +60,57 @@ A powerful native macOS application for converting, splitting, and merging JSON,
 1. Download the DMG file
 2. Double-click the DMG to mount it
 3. Drag "FileShift" to your Applications folder
-4. **First time running**: The app will show a security warning because it's not signed with an Apple Developer certificate
+4. **First time running**: The app will show a security warning because it's not signed with an Apple Developer certificate ($99/year). See below for how to bypass this.
 
-### Security Warning Fix
+### Opening an Unsigned App on macOS
 
-Since the app isn't signed with an Apple Developer certificate, macOS will block it on first launch. Here's how to open it:
+macOS Gatekeeper blocks apps without Apple Developer certificates. Choose one of the methods below:
 
-1. **Try to open the app** - You'll see a warning saying "FileShift.app cannot be opened because Apple cannot verify it is free of malware." Click **Done** (not "Move to Trash").
+#### Method 1: Right-Click → Open (Simplest)
 
-2. **Open System Settings** - Go to **Privacy & Security** and scroll down to the **Security** section. You'll see a message: *"FileShift.app" was blocked to protect your Mac.* Click **Open Anyway**.
+1. **Right-click** (or Control-click) on FileShift.app in Finder
+2. Select **Open** from the context menu
+3. Click **Open** in the dialog that appears
 
-3. **Confirm** - A final dialog will appear asking if you're sure. Click **Open Anyway** to launch the app.
+This presents a different dialog that allows you to open the app directly.
 
-After this one-time setup, the app will open normally without any warnings.
+#### Method 2: System Settings (If Method 1 Doesn't Work)
+
+1. **Try to open the app normally** (double-click) — You'll see a warning. Click **Done** (not "Move to Trash").
+
+2. **Open System Settings** → **Privacy & Security**
+
+3. **Scroll down** to the Security section. You'll see:
+   > *"FileShift.app" was blocked from use because it is not from an identified developer.*
+
+   Click **Open Anyway**
+
+4. **Enter your password** if prompted, then click **Open Anyway** again in the confirmation dialog.
+
+#### Method 3: Terminal Command (Most Reliable)
+
+If the above methods don't work, remove the quarantine flag using Terminal:
+
+```bash
+xattr -d com.apple.quarantine /Applications/FileShift.app
+```
+
+Then open the app normally.
+
+#### Method 4: Run from Source (No Restrictions)
+
+Running from source bypasses Gatekeeper entirely:
+
+```bash
+git clone https://github.com/simplifi/FileShift.git
+cd FileShift
+python -m venv .venv
+source .venv/bin/activate
+pip install PyQt6
+python -m src
+```
+
+After completing any method once, the app will open normally without warnings.
 
 ## Usage
 
