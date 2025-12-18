@@ -20,9 +20,9 @@ excluded_modules = [
 ]
 
 a = Analysis(
-    ['src/main.py'],
-    pathex=['.'],
-    datas=[('src', 'src')],
+    ['../src/main.py'],
+    pathex=['..'],
+    datas=[('../src', 'src')],
     hiddenimports=['src.converters', 'src.converters.base', 'src.converters.handlers', 'src.converters.operations'],
     excludes=excluded_modules,
     optimize=2,
