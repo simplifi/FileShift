@@ -51,16 +51,11 @@ clean:
 
 # Build standalone app
 build:
-    uv run pyinstaller json_to_csv_multifile_pyqt.py \
-        --name "FileShift" \
-        --windowed \
-        --onefile \
-        --icon resources/icon.ico \
-        --add-data "src:src"
+    uv run pyinstaller --clean packaging/fileshift.spec
 
 # Run the GUI app
 run:
-    uv run python json_to_csv_multifile_pyqt.py
+    uv run python -m src
 
 # Run the CLI
 run-cli *ARGS:
@@ -68,7 +63,7 @@ run-cli *ARGS:
 
 # Generate sample data
 generate-samples:
-    uv run python scripts/generate_sample_data.py
+    uv run python packaging/scripts/generate_sample_data.py
 
 # Run pre-commit hooks
 pre-commit:
@@ -89,7 +84,7 @@ benchmark:
 
 # Profile the application
 profile FILE:
-    uv run python -m cProfile -o profile.stats json_to_csv_multifile_pyqt.py {{FILE}}
+    uv run python -m cProfile -o profile.stats -m src {{FILE}}
     uv run python -m pstats profile.stats
 
 # Update dependencies

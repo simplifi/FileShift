@@ -20,7 +20,7 @@ excluded_modules = [
 ]
 
 a = Analysis(
-    ['json_to_csv_multifile_pyqt.py'],
+    ['src/main.py'],
     pathex=['.'],
     datas=[('src', 'src')],
     hiddenimports=['src.converters', 'src.converters.base', 'src.converters.handlers', 'src.converters.operations'],

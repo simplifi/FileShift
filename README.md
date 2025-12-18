@@ -147,7 +147,7 @@ source .venv/bin/activate
 uv pip install -e ".[dev]"
 
 # Run the application
-python json_to_csv_multifile_pyqt.py
+python -m src
 
 # Run tests
 pytest
@@ -157,14 +157,16 @@ pytest
 
 ```
 FileShift/
-├── json_to_csv_multifile_pyqt.py  # Main GUI application
 ├── src/
+│   ├── gui.py                      # Main GUI application
+│   ├── main.py                     # Entry point
 │   └── converters/                 # Core conversion library
 │       ├── base.py                 # Base classes and types
 │       ├── handlers.py             # Format handlers (JSON, JSONL, CSV)
 │       └── operations.py           # Split and merge operations
 ├── tests/                          # Test suite
-├── fileshift.spec                  # PyInstaller build spec
+├── packaging/
+│   └── fileshift.spec              # PyInstaller build spec
 └── pyproject.toml                  # Project configuration
 ```
 
